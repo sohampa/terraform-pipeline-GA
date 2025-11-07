@@ -68,5 +68,4 @@ jobs:
       # Step 8: Terraform Apply (only on main branch)
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
-        working-directory: ./terraform
         run: terraform apply -var-file="${{ github.event.inputs.environment }}.tfvars"
