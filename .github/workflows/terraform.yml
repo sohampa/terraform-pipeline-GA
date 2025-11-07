@@ -46,7 +46,6 @@ jobs:
 
       # Step 4: Initialize Terraform
       - name: Terraform Init
-        working-directory: ./terraform
         run: terraform init
 
       # Step 5: Select/Create Workspace based on input
