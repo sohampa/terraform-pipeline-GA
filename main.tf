@@ -20,17 +20,6 @@ locals {
   secret_name = "terraform/${local.environment}/ec2_config"
 }
 
-# Fetch secret from AWS Secrets Manager
-data "aws_secretsmanager_secret_version" "ec2_config" {
-  secret_id = local.secret_name
-}
-
-# Decode JSON secret
-locals {
-  ec2_config = jsondecode(data.aws_secretsmanager_secret_version.ec2_config.secret_string)
-}
-
-
 
 # Fetch the latest Amazon Linux 2 AMI
 data "aws_ami" "amazon_linux" {
