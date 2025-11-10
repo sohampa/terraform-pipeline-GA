@@ -44,7 +44,7 @@ jobs:
           role-to-assume: arn:aws:iam::543816070942:role/Finastra-Group1-Role
           aws-region: ${{ env.AWS_REGION }}
 
-      # Step 4: Initialize Terraform
+      # Step 4: Terraform Init
       - name: Terraform Init
         run: terraform init
 
@@ -57,37 +57,15 @@ jobs:
           terraform workspace list | grep $ENV || terraform workspace new $ENV
           terraform workspace select $ENV
 
-      # Step 6: Fetch environment-specific secrets from AWS Secrets Manager
-      - name: Fetch Secrets from AWS Secrets Manager
-        id: secrets
-        run: |
-          SECRET_NAME="terraform/${{ github.event.inputs.environment }}"
-          echo "Fetching secrets from $SECRET_NAME ..."
-          SECRET_VALUE=$(aws secretsmanager get-secret-value \
-            --secret-id "$SECRET_NAME" \
-            --query SecretString \
-            --output text)
-          echo "Secrets fetched successfully."
-          echo "secret_value=$SECRET_VALUE" >> $GITHUB_OUTPUT
-
-      # Step 7: Create temporary tfvars file from secrets
-      - name: Create Secrets File
-        run: |
-          echo '{"instance_type": "t2.micro", "key_name": "soham-cybage"}' > secrets.json
-          echo "instance_type = \"$(jq -r .instance_type secrets.json)\"" > secrets.tfvars
-          echo "key_name      = \"$(jq -r .key_name secrets.json)\"" >> secrets.tfvars
-          cat secrets.tfvars
-
-
-      # Step 8: Terraform Validate
+      # Step 6: Terraform Validate
       - name: Terraform Validate
         run: terraform validate
 
-      # Step 9: Terraform Plan
+      # Step 7: Terraform Plan
       - name: Terraform Plan
-        run: terraform plan -var-file="secrets.tfvars"
+        run: terraform plan
 
-      # Step 10: Terraform Apply (only on main branch)
+      # Step 8: Terraform Apply (only on main branch)
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
-        run: terraform apply -var-file="secrets.tfvars"
+        run: terraform apply
