@@ -1,0 +1,66 @@
+name: Terraform Destroy Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Select environment to destroy"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  terraform-destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+
+    env:
+      TF_CLI_ARGS_init: "-input=false"
+      TF_CLI_ARGS_destroy: "-auto-approve"
+      AWS_REGION: us-east-1
+
+    steps:
+      # Step 1: Checkout Code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      # Step 3: Configure AWS Credentials (OIDC)
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::543816070942:role/Soham-OIDC-Role
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Step 4: Initialize Terraform
+      - name: Terraform Init
+        run: terraform init
+
+      # Step 5: Select Workspace based on input
+      - name: Select Workspace
+        run: |
+          ENV=${{ github.event.inputs.environment }}
+          echo "Selected environment: $ENV"
+          terraform workspace list | grep $ENV || terraform workspace new $ENV
+          terraform workspace select $ENV
+
+      # Step 6: Terraform Plan Destroy
+      - name: Terraform Plan (Destroy)
+        run: terraform plan -destroy -var-file="${{ github.event.inputs.environment }}.tfvars"
+
+      # Step 7: Terraform Destroy (only on main branch)
+      - name: Terraform Destroy
+        if: github.ref == 'refs/heads/main'
+        run: terraform destroy -var-file="${{ github.event.inputs.environment }}.tfvars" -auto-approve
