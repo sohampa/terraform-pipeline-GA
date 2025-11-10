@@ -3,6 +3,16 @@ provider "aws" {
   region = "us-east-1" # Change this to your preferred region
 }
 
+terraform {
+  backend "s3" {
+    bucket         = "temp-soham-s3"
+    key            = "terraform/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    # dynamodb_table = "terraform-lock" # Optional: for state locking
+  }
+}
+
 locals {
   environment   = terraform.workspace
   instance_name  = "terraform-ec2-${local.environment}"
