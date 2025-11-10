@@ -44,23 +44,24 @@ jobs:
           role-to-assume: arn:aws:iam::543816070942:role/Finastra-Group1-Role
           aws-region: ${{ env.AWS_REGION }}
 
-      # Step 4: Initialize Terraform
+      # Step 4: Terraform Init
       - name: Terraform Init
         run: terraform init
 
-      # Step 5: Select Workspace based on input
+      # Step 5: Select Workspace
       - name: Select Workspace
+        id: workspace
         run: |
           ENV=${{ github.event.inputs.environment }}
           echo "Selected environment: $ENV"
           terraform workspace list | grep $ENV || terraform workspace new $ENV
           terraform workspace select $ENV
 
-      # Step 6: Terraform Plan Destroy
-      - name: Terraform Plan (Destroy)
-        run: terraform plan -destroy -var-file="${{ github.event.inputs.environment }}.tfvars"
+      # Step 6: Terraform Plan (Destroy Preview)
+      - name: Terraform Plan Destroy
+        run: terraform plan -destroy
 
       # Step 7: Terraform Destroy (only on main branch)
       - name: Terraform Destroy
         if: github.ref == 'refs/heads/main'
-        run: terraform destroy -var-file="${{ github.event.inputs.environment }}.tfvars" -auto-approve
+        run: terraform destroy -auto-approve
