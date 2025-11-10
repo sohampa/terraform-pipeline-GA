@@ -17,7 +17,7 @@ locals {
   environment   = terraform.workspace
   instance_name  = "terraform-ec2-${local.environment}"
   sg_name        = "ec2_sg_${local.environment}"
-  secret_name = "terraform/${local.env}/ec2_config"
+  secret_name = "terraform/${local.environment}/ec2_config"
 }
 
 # Fetch secret from AWS Secrets Manager
@@ -87,10 +87,10 @@ resource "aws_security_group" "ec2_sg" {
 # Create EC2 instance
 resource "aws_instance" "example" {
   ami           = data.aws_ami.amazon_linux.id
-  instance_type = local.ec2_config.instance_type
+  instance_type = var.instance_type
   subnet_id     = data.aws_subnets.default.ids[0]
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
-  key_name      = local.ec2_config.key_name
+  key_name      = var.key_name
   
   
 
