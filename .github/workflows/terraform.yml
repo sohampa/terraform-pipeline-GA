@@ -71,12 +71,13 @@ jobs:
           echo "secret_value=$SECRET_VALUE" >> $GITHUB_OUTPUT
 
       # Step 7: Create temporary tfvars file from secrets
-      - name: Create secrets.tfvars
+      - name: Create Secrets File
         run: |
-          echo '${{ steps.secrets.outputs.secret_value }}' > secrets.json
+          echo '{"instance_type": "t2.micro", "key_name": "soham-cybage"}' > secrets.json
           echo "instance_type = \"$(jq -r .instance_type secrets.json)\"" > secrets.tfvars
           echo "key_name      = \"$(jq -r .key_name secrets.json)\"" >> secrets.tfvars
           cat secrets.tfvars
+
 
       # Step 8: Terraform Validate
       - name: Terraform Validate
