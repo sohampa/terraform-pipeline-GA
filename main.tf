@@ -1,6 +1,6 @@
 # Specify the provider
 provider "aws" {
-  region = "us-east-1" # Change this to your preferred region
+  region = "us-east-1"
 }
 
 terraform {
@@ -14,10 +14,10 @@ terraform {
 }
 
 locals {
-  environment   = terraform.workspace
+  environment    = terraform.workspace
   instance_name  = "terraform-ec2-${local.environment}"
   sg_name        = "ec2_sg_${local.environment}"
-  secret_name = "terraform/${local.environment}/ec2_config"
+  secret_name    = "terraform/${local.environment}" # ✅ FIXED
 }
 
 # Fetch secret from AWS Secrets Manager
@@ -30,25 +30,21 @@ locals {
   ec2_config = jsondecode(data.aws_secretsmanager_secret_version.ec2_config.secret_string)
 }
 
-
 # Fetch the latest Amazon Linux 2 AMI
 data "aws_ami" "amazon_linux" {
   most_recent = true
-
   filter {
     name   = "name"
     values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
-
   owners = ["amazon"]
 }
 
-# Get the default VPC
+# Get default VPC and subnet
 data "aws_vpc" "default" {
   default = true
 }
 
-# Get the first subnet from the default VPC
 data "aws_subnets" "default" {
   filter {
     name   = "vpc-id"
@@ -56,7 +52,7 @@ data "aws_subnets" "default" {
   }
 }
 
-# Create a security group allowing SSH access
+# Security group for SSH
 resource "aws_security_group" "ec2_sg" {
   name        = local.sg_name
   description = "Allow SSH access"
@@ -83,15 +79,13 @@ resource "aws_security_group" "ec2_sg" {
   }
 }
 
-# Create EC2 instance
+# EC2 instance
 resource "aws_instance" "example" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = local.ec2_config.instance_type
-  subnet_id     = data.aws_subnets.default.ids[0]
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = local.ec2_config.instance_type
+  subnet_id              = data.aws_subnets.default.ids[0]
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
-  key_name      = local.ec2_config.key_name
-  
-  
+  key_name               = local.ec2_config.key_name
 
   tags = {
     Name        = local.instance_name
@@ -99,27 +93,17 @@ resource "aws_instance" "example" {
   }
 }
 
-# Create an S3 bucket
+# Create S3 bucket
 resource "aws_s3_bucket" "terraform_soham_bucket" {
-  bucket = "terrafrom-soham-bucket"
+  bucket = "terraform-soham-bucket"
 
   tags = {
-    Name        = "terrafrom-soham-bucket"
+    Name        = "terraform-soham-bucket"
     Environment = local.environment
   }
 }
 
-# Output the instance public IP
+# Output instance public IP
 output "instance_public_ip" {
   value = aws_instance.example.public_ip
-}
-
-variable "instance_type" {
-  description = "EC2 instance type"
-  type        = string
-}
-
-variable "key_name" {
-  description = "EC2 key pair name"
-  type        = string
 }
