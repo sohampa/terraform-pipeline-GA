@@ -87,11 +87,30 @@ resource "aws_instance" "example" {
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   key_name               = local.ec2_config.key_name
 
+  # User data to install Java 17
+  user_data = <<-EOF
+    #!/bin/bash
+    set -e
+
+    echo "===== Updating system packages ====="
+    yum update -y
+
+    echo "===== Installing Amazon Corretto 17 (Java 17) ====="
+    amazon-linux-extras enable corretto17
+    yum install -y java-17-amazon-corretto
+
+    echo "===== Verifying Java installation ====="
+    java -version
+
+    echo "===== Java 17 installation completed successfully ====="
+  EOF
+
   tags = {
     Name        = local.instance_name
     Environment = local.environment
   }
 }
+
 
 # Create S3 bucket
 resource "aws_s3_bucket" "terraform_soham_bucket" {
