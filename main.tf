@@ -85,6 +85,16 @@ resource "aws_instance" "example" {
   }
 }
 
+# Create an S3 bucket
+resource "aws_s3_bucket" "terraform_soham_bucket" {
+  bucket = "terrafrom-soham-bucket"
+
+  tags = {
+    Name        = "terrafrom-soham-bucket"
+    Environment = local.environment
+  }
+}
+
 # Output the instance public IP
 output "instance_public_ip" {
   value = aws_instance.example.public_ip
