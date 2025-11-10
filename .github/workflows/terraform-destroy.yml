@@ -41,7 +41,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::543816070942:role/Soham-OIDC-Role
+          role-to-assume: arn:aws:iam::543816070942:role/Finastra-Group1-Role
           aws-region: ${{ env.AWS_REGION }}
 
       # Step 4: Initialize Terraform
